@@ -1,0 +1,17 @@
+<component name="libraryTable">
+  <library name="ffmpeg-platform">
+    <CLASSES>
+      <root url="jar://C:/javacv-platform-1.5.1-bin/ffmpeg-platform.jar!/" />
+      <root url="jar://C:/javacv-platform-1.5.1-bin/ffmpeg-windows-x86_64.jar!/" />
+      <root url="jar://C:/javacv-platform-1.5.1-bin/ffmpeg.jar!/" />
+      <root url="jar://C:/javacv-platform-1.5.1-bin/javacpp.jar!/" />
+      <root url="jar://C:/javacv-platform-1.5.1-bin/javacv-platform.jar!/" />
+      <root url="jar://C:/javacv-platform-1.5.1-bin/javacv.jar!/" />
+      <root url="jar://C:/javacv-platform-1.5.1-bin/opencv-platform.jar!/" />
+      <root url="jar://C:/javacv-platform-1.5.1-bin/opencv-windows-x86_64.jar!/" />
+      <root url="jar://C:/javacv-platform-1.5.1-bin/opencv.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
