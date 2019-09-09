@@ -31,6 +31,14 @@ public class loginpanel {
 
             }
         });
+        captureButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                Capture2 capture2 = new Capture2();
+                //capture.setVisible(true);
+            }
+        });
     }
 
     public static void main(String[] args) {
