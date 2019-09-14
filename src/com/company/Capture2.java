@@ -3,22 +3,31 @@ package com.company;
 import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.opencv.global.opencv_imgproc;
 import org.bytedeco.opencv.opencv_core.*;
+import org.bytedeco.opencv.opencv_face.FaceRecognizer;
+import org.bytedeco.opencv.opencv_face.LBPHFaceRecognizer;
 import org.bytedeco.opencv.opencv_objdetect.CascadeClassifier;
 import org.bytedeco.opencv.opencv_videoio.VideoCapture;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.IntBuffer;
 
-import static org.bytedeco.opencv.global.opencv_imgcodecs.imencode;
-import static org.bytedeco.opencv.global.opencv_imgcodecs.imwrite;
+import static org.bytedeco.opencv.global.opencv_core.CV_32SC1;
+import static org.bytedeco.opencv.global.opencv_imgcodecs.*;
 import static org.bytedeco.opencv.global.opencv_imgproc.*;
 
-
 public class Capture2 {
+
+    public final static String PHOTOS_PATH = "C:/photos";
+    public final static String HAAR_XML = "C:/photos/haarcascade_frontalface_alt";
 
     JFrame jFrame = new JFrame();
     private JLabel label_photo;
@@ -34,21 +43,31 @@ public class Capture2 {
         jFrame.pack();
         jFrame.setVisible(true);
 
+
+
         startCamera();
+        saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                startCamera();
+            }
+        });
     }
 
     private Capture2.DaemonThread myThread = null;
 
 
-    VideoCapture webSource = null;
+
+    private VideoCapture webSource = null;
+   // org.opencv.core.Mat cameraImg = new org.opencv.core.Mat();
     Mat cameraImage = new Mat();
-    CascadeClassifier cascade = new CascadeClassifier("");
+    CascadeClassifier cascade = new CascadeClassifier(HAAR_XML);
     BytePointer mem = new BytePointer();
     RectVector detectedFaces = new RectVector();
 
-    String root;
-    int numSamples = 25;
-    int sample = 1;
+    String root, firstNamePerson, lastNamePerson, officePerson;
+    int numSamples = 25, sample = 1, idPerson;
 
     DBConnection dbConnection = new DBConnection();
 
@@ -126,19 +145,59 @@ public class Capture2 {
     }
 
     public void generate() {
+        File directory = new File(PHOTOS_PATH);
+        FilenameFilter filenameFilter = new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".jpg") || name.endsWith(".png");
+            }
+        };
+
+        File[] files = directory.listFiles(filenameFilter);
+        MatVector photos = new MatVector(files.length);
+        Mat labels = new Mat(files.length, 1, CV_32SC1);
+        IntBuffer labelsBuffer = labels.createBuffer();
+
+        int counter = 0;
+        for(File image : files){
+           Mat photo = imread(image.getAbsolutePath(), IMREAD_GRAYSCALE);
+           int idPerson = 1;
+           opencv_imgproc.resize(photo, photo, new Size(160, 160));
+
+           photos.put(counter, photo);
+           labelsBuffer.put(counter, idPerson);
+           counter++;
+        }
+
+        FaceRecognizer lbph = LBPHFaceRecognizer.create();
+        lbph.train(photos, labels);
+        lbph.save(PHOTOS_PATH + "/calssifierLBPH.yml");
+
     }
 
     public void insertDatabase() {
+        DBConnection dbConnection = new DBConnection();
+        dbConnection.setConnection();
+        String milis = Long.toString(System.currentTimeMillis());
+        ModelPerson modelPerson = new ModelPerson("Aaa" +  milis , "Bbb", "Ccc");
+        ControlPerson controlPerson = new ControlPerson();
+        controlPerson.insertDataToDB(modelPerson);
+        dbConnection.disconnection();
     }
 
     public void stopCamera() {
         myThread.runnable = false;
         webSource.release();
-       // JFrame.EXIT_ON_CLOSE;
+        jFrame.dispose();
     }
 
     public void startCamera() {
-
+        webSource = new VideoCapture(0);
+        myThread = new Capture2.DaemonThread();
+        Thread thread = new Thread(myThread);
+        thread.setDaemon(true);
+        myThread.runnable = true;
+        thread.start();
 
     }
 
